@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SONG PASSWORD</title>
+<meta name="description" content="Proudly made by a KV KNN student which heelps you to:- Search a song, tick the lyric lines you remember, and turn them into a password.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffc42e'/%3E%3Cpath d='M10 14v-3a6 6 0 0112 0v3' fill='none' stroke='%230b1c21' stroke-width='2.6' stroke-linecap='round'/%3E%3Crect x='7' y='14' width='18' height='12' rx='3' fill='%230b1c21'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Gurmukhi:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark light;
+  --ui:'Bricolage Grotesque','Noto Sans Devanagari','Noto Sans Gurmukhi',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#0b1c21; --surface:#112830; --surface2:#183641; --line:#26505c; --track:#2f5c69;
+  --text:#eaf3ef; --muted:#97b6bb;
+  --accent:#ffc42e; --accent-ink:#ffc42e; --on-accent:#0b1c21;
+  --hl:rgba(255,196,46,.30);
+  --ok:#5fd6a0; --warn:#ffc42e; --bad:#ff7a93; --ring:#ffc42e;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#eef3f0; --surface:#ffffff; --surface2:#e3ece8; --line:#c3d4ce; --track:#8aa5a8;
+    --text:#0e2a31; --muted:#4d6b70;
+    --accent:#f2b200; --accent-ink:#7d5200; --on-accent:#0e2a31;
+    --hl:rgba(255,196,40,.6);
+    --ok:#177a4f; --warn:#a56d00; --bad:#c22d4b; --ring:#0e5f6e;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);line-height:1.5;min-height:100vh}
+button,input{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+a{color:var(--accent-ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 48px}
+
+/* header */
+.brand{display:flex;align-items:center;gap:14px}
+.logo{flex:none;width:46px;height:46px;border-radius:13px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+h1{font-size:clamp(1.5rem,3vw,1.9rem);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.tag{color:var(--muted);font-size:.95rem;margin-top:3px}
+
+/* search */
+.search{display:flex;gap:10px;margin:24px 0 22px}
+.field{position:relative;flex:1;min-width:0}
+.field svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.field input{width:100%;padding:15px 16px 15px 46px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:1.08rem}
+.field input::placeholder{color:var(--muted)}
+.field input:focus{border-color:var(--accent-ink)}
+.search .btn{min-height:54px;padding:0 24px;border-radius:14px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface2);color:var(--text);font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{border-color:var(--accent-ink)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent}
+.btn.icon{width:44px;padding:0;flex:none}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:24px;align-items:start}
+.layout>main{min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.stage-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+.stage-note{margin:4px 0 16px;color:var(--muted)}
+
+/* welcome */
+.welcome{padding:26px 26px 24px}
+.welcome h2{font-size:clamp(1.3rem,2.6vw,1.65rem);font-weight:800;letter-spacing:-.025em;line-height:1.2;max-width:26ch}
+.steps{list-style:none;margin:22px 0 24px;padding:0;display:grid;gap:16px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:800}
+.steps b{display:block;font-weight:700}
+.steps span{color:var(--muted);font-size:.95rem}
+.examples{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip-btn{border:1.5px solid var(--line);background:var(--surface2);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:.92rem}
+.chip-btn:hover{border-color:var(--accent-ink)}
+
+/* results */
+.results{display:grid;gap:10px}
+.result{display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
+.result:hover{border-color:var(--accent-ink);background:var(--surface2)}
+.result .art{flex:none;width:48px;height:48px;border-radius:12px;background:var(--surface2);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:1.2rem}
+.result:hover .art{background:var(--bg)}
+.result .info{min-width:0;flex:1}
+.result h3{font-size:1.04rem;font-weight:700;line-height:1.3}
+.result .by{color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:4px 14px}
+.result .snip{color:var(--muted);font-size:.88rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.skeleton{height:80px;border-radius:14px;background:linear-gradient(90deg,var(--surface) 0,var(--surface2) 50%,var(--surface) 100%);background-size:200% 100%;animation:shine 1.3s linear infinite}
+@keyframes shine{to{background-position:-200% 0}}
+.msg{padding:26px}
+.msg h2{font-size:1.2rem;font-weight:800;letter-spacing:-.02em}
+.msg p{margin-top:8px;color:var(--muted);max-width:60ch}
+.msg ul{margin:10px 0 0;padding-left:20px;color:var(--muted)}
+.msg .btn{margin-top:16px}
+
+/* song + lyrics */
+.song-head{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-start;padding:22px 24px 18px}
+.song-head h2{font-size:clamp(1.35rem,3vw,1.75rem);font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.artist{margin-top:5px;font-weight:600;color:var(--accent-ink)}
+.meta{margin-top:2px;display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--muted);font-size:.9rem}
+.song-actions{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:12px 24px;border-block:1px solid var(--line);color:var(--muted);font-size:.93rem}
+.filter input{padding:9px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);min-width:220px}
+.filter input:focus{border-color:var(--accent-ink)}
+.lyrics{padding:10px 12px 22px}
+.gap{height:16px}
+.section-name{padding:10px 12px 2px 66px;font-style:italic;color:var(--muted);font-size:.9rem}
+.line{position:relative;display:flex;align-items:flex-start;gap:12px;padding:8px 12px;border-radius:10px;cursor:pointer}
+.line:hover{background:var(--surface2)}
+.line input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.box{flex:none;width:22px;height:22px;margin-top:3px;border-radius:7px;border:2px solid var(--muted);display:grid;place-items:center;color:var(--on-accent);transition:background .12s,border-color .12s}
+.box svg{opacity:0;transform:scale(.5);transition:opacity .12s,transform .12s}
+.line input:checked + .box{background:var(--accent);border-color:var(--accent)}
+.line input:checked + .box svg{opacity:1;transform:none}
+.line input:focus-visible + .box{outline:3px solid var(--ring);outline-offset:2px}
+.num{flex:none;min-width:2.1em;margin-top:5px;text-align:right;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.txt-wrap{flex:1;min-width:0;font-size:1.08rem;line-height:1.55;overflow-wrap:anywhere}
+.line.on .txt{background:var(--hl);padding:1px 6px;margin:0 -6px;border-radius:4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+
+/* password panel */
+.panel{position:sticky;top:16px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;max-height:calc(100vh - 32px);overflow:auto}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.panel-head h2{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.count{color:var(--muted);font-size:.9rem}
+.readout{margin:12px 0;padding:14px;min-height:62px;border-radius:12px;background:var(--bg);border:1.5px dashed var(--line);font:700 1.08rem/1.5 var(--mono);overflow-wrap:anywhere;word-break:break-all;max-height:150px;overflow:auto}
+.readout.empty{font:400 .95rem/1.5 var(--ui);color:var(--muted);word-break:normal;overflow-wrap:normal}
+.readout.masked{letter-spacing:.1em}
+.actions{display:flex;gap:8px}
+.actions .primary{flex:1}
+.meter-row{display:flex;align-items:center;gap:10px;margin:14px 0 4px;font-size:.88rem;color:var(--muted)}
+.meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;flex:1}
+.meter i{height:6px;border-radius:3px;background:var(--line)}
+.meter[data-level="1"] i:nth-child(-n+1){background:var(--bad)}
+.meter[data-level="2"] i:nth-child(-n+2){background:var(--warn)}
+.meter[data-level="3"] i:nth-child(-n+3){background:var(--ok)}
+.meter[data-level="4"] i:nth-child(-n+4){background:var(--ok)}
+.meter-row b{color:var(--text);font-weight:600;min-width:5.5ch}
+.notes{margin-top:10px;display:grid;gap:6px}
+.notes p{font-size:.88rem;color:var(--muted);padding-left:12px;border-left:3px solid var(--warn)}
+.fine{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.fine summary{cursor:pointer;font-weight:700;padding:4px 0;list-style-position:inside}
+.fine .body{display:grid;gap:14px;margin-top:12px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{padding:0;margin-bottom:6px;font-size:.86rem;font-weight:600;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.seg label{position:relative;flex:1 1 auto}
+.seg input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg span{display:block;padding:8px 10px;border-radius:8px;text-align:center;font-size:.88rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg input:checked + span{background:var(--accent);color:var(--on-accent)}
+.seg input:focus-visible + span{outline:3px solid var(--ring);outline-offset:1px}
+.switch{display:flex;align-items:center;gap:12px;cursor:pointer;font-size:.93rem;position:relative}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--track);position:relative;transition:background .15s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(16px);background:var(--on-accent)}
+.switch input:focus-visible + .track{outline:3px solid var(--ring);outline-offset:2px}
+.picks-title{font-size:.86rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+.picks{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pick{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:.9rem}
+.pick:hover{border-color:var(--bad)}
+.pick b{font-family:var(--mono);font-size:.74rem;color:var(--accent-ink);min-width:2.2em;text-align:right}
+.pick span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick svg{flex:none;color:var(--muted)}
+.picks-empty{font-size:.9rem;color:var(--muted)}
+
+/* footer */
+.foot{margin-top:34px;color:var(--muted);font-size:.9rem;display:grid;gap:12px;max-width:80ch}
+.foot summary{cursor:pointer;font-weight:600;color:var(--text)}
+.foot ul{margin:10px 0 0;padding-left:20px;display:grid;gap:6px}
+
+@media (max-width:920px){
+  .wrap{padding:16px 14px 40px}
+  .layout{display:block}
+  .panel{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;max-height:58vh;border-radius:18px 18px 0 0;border-width:1px 0 0;padding:14px 16px 16px;box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+  .panel.idle{display:none}
+  .readout{margin:10px 0;min-height:54px;max-height:90px}
+  .search .btn{padding:0 18px}
+  .song-head{padding:18px 16px 14px}
+  .toolbar{padding:12px 16px}
+  .filter,.filter input{width:100%}
+  .lyrics{padding:8px 4px 18px}
+  .welcome{padding:22px 18px}
+  .section-name{padding-left:58px}
+}
+@media (max-width:420px){
+  .search .btn span.long{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14v-3.5a6.5 6.5 0 0113 0V14"/><rect x="5.5" y="14" width="21" height="13.5" rx="3.5"/><path d="M14.5 23.5v-5.3l5.2-1.2v4.3"/><circle cx="13" cy="23.5" r="1.7" fill="currentColor"/><circle cx="18.2" cy="21.5" r="1.7" fill="currentColor"/></svg>
+    </span>
+    <div>
+      <h1>Song Password</h1>
+      <p class="tag">Turn lines you know by heart into a password you won't forget.</p>
+    </div>
+  </header>
+
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <label class="field">
+      <span class="sr">Song name</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" name="q" placeholder="Search a song name" autocapitalize="off" spellcheck="false" enterkeyhint="search" maxlength="120">
+    </label>
+    <button class="btn primary" id="goBtn" type="submit"><span>Find <span class="long">lyrics</span></span></button>
+  </form>
+
+  <noscript><div class="card msg"><h2>JavaScript is off</h2><p>Song Password needs JavaScript to look up lyrics and build your password. Turn it on and reload this page.</p></div></noscript>
+
+  <div class="layout">
+    <main id="stage"></main>
+
+    <aside class="panel" id="panel" aria-label="Your password">
+      <div class="panel-head">
+        <h2>Your password</h2>
+        <span class="count" id="count">0 lines</span>
+      </div>
+
+      <div class="readout empty" id="readout" tabindex="0"></div>
+
+      <div class="actions">
+        <button class="btn primary" id="copyBtn" type="button" disabled>Copy password</button>
+        <button class="btn icon" id="eyeBtn" type="button" aria-pressed="true" aria-label="Hide password" title="Hide or show password"></button>
+        <button class="btn icon" id="clearBtn" type="button" aria-label="Untick all lines" title="Untick all lines" disabled></button>
+      </div>
+
+      <div class="meter-row" title="Based on length. Lyrics are public, so pick lines nobody would link to you.">
+        <div class="meter" id="meter" data-level="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <b id="meterLabel">Nothing yet</b>
+        <span id="lenLabel"></span>
+      </div>
+      <div class="notes" id="notes" hidden></div>
+
+      <details class="fine" id="fine" open>
+        <summary>Fine-tune your password</summary>
+        <div class="body">
+          <fieldset>
+            <legend>Use</legend>
+            <div class="seg">
+              <label><input type="radio" name="style" value="full"><span>Full words</span></label>
+              <label><input type="radio" name="style" value="initials"><span>First letters</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Separator</legend>
+            <div class="seg">
+              <label><input type="radio" name="sep" value=""><span>None</span></label>
+              <label><input type="radio" name="sep" value="-"><span>Dash -</span></label>
+              <label><input type="radio" name="sep" value="_"><span>Underscore _</span></label>
+              <label><input type="radio" name="sep" value=" "><span>Space</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Letter case</legend>
+            <div class="seg">
+              <label><input type="radio" name="casing" value="orig"><span>As written</span></label>
+              <label><input type="radio" name="casing" value="lower"><span>lower</span></label>
+              <label><input type="radio" name="casing" value="cap"><span>Capitalised</span></label>
+              <label><input type="radio" name="casing" value="upper"><span>UPPER</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Order of lines</legend>
+            <div class="seg">
+              <label><input type="radio" name="order" value="song"><span>Same as the song</span></label>
+              <label><input type="radio" name="order" value="click"><span>Order I tick them</span></label>
+            </div>
+          </fieldset>
+          <label class="switch"><input type="checkbox" id="optStrip"><span class="track"></span><span>Remove punctuation</span></label>
+          <label class="switch"><input type="checkbox" id="optSuffix"><span class="track"></span><span>Add line numbers and ! at the end</span></label>
+
+          <div>
+            <p class="picks-title" id="picksTitle">Lines in your password</p>
+            <ol class="picks" id="picks" aria-labelledby="picksTitle"></ol>
+            <p class="picks-empty" id="picksEmpty">None ticked yet.</p>
+          </div>
+        </div>
+      </details>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <details>
+      <summary>How safe is a song password?</summary>
+      <ul>
+        <li>Lyrics are public. Anyone who guesses your song can try its lines, so avoid a song you have posted about or put in a bio.</li>
+        <li>Tick three or more lines from different parts of the song, and aim for 16 characters or more.</li>
+        <li>Use different lines for each important account. For your email and bank, a password manager is still the safest home for passwords.</li>
+        <li>You need to remember the song, the lines and these settings. The page does not save your password or your ticked lines.</li>
+      </ul>
+    </details>
+    <p>Lyrics come from <a href="https://lrclib.net" target="_blank" rel="noopener noreferrer">LRCLIB</a>. Your password is built on this page and never sent anywhere. Only the song you search for goes to lrclib.net.</p>
+  </footer>
+</div>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+const API = 'https://lrclib.net/api/search';
+const OPT_KEY = 'songpassword.options.v1';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/* ---------- tiny helpers ---------- */
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.9 9.9 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.4 7.7C3.8 9.5 2 12 2 12s3.6 6 10 6c1.5 0 2.9-.3 4.1-.9"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg>',
+  reset: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>',
+  back: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  dice: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>'
+};
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return n;
+}
+function button(label, icon, cls, onclick) {
+  const b = el('button', { type: 'button', class: 'btn ' + cls, onclick });
+  if (icon) b.insertAdjacentHTML('afterbegin', ICON[icon]);
+  b.append(document.createTextNode(label));
+  return b;
+}
+const fmtDur = (sec) => {
+  const t = Math.round(sec);
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+};
+function randInt(max) {
+  const a = new Uint32Array(1);
+  const lim = Math.floor(0x100000000 / max) * max;
+  let x;
+  do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim);
+  return x % max;
+}
+const seg = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+const graphemes = (s) => seg ? Array.from(seg.segment(s), (x) => x.segment) : Array.from(s);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobileMQ = matchMedia('(max-width: 920px)');
+
+/* ---------- options (kept in this browser, never the password) ---------- */
+const DEFAULTS = { style: 'full', sep: '', casing: 'cap', order: 'song', strip: true, suffix: false, reveal: true };
+function loadOpts() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(OPT_KEY) || '{}') || {}; } catch (e) { /* storage unavailable */ }
+  const out = { ...DEFAULTS };
+  const allowed = { style: ['full', 'initials'], sep: ['', '-', '_', ' '], casing: ['orig', 'lower', 'cap', 'upper'], order: ['song', 'click'] };
+  for (const [k, list] of Object.entries(allowed)) if (list.includes(saved[k])) out[k] = saved[k];
+  for (const k of ['strip', 'suffix']) if (typeof saved[k] === 'boolean') out[k] = saved[k];
+  return out;
+}
+function saveOpts() {
+  const { reveal, ...persist } = opts;
+  try { localStorage.setItem(OPT_KEY, JSON.stringify(persist)); } catch (e) { /* ignore */ }
+}
+const opts = loadOpts();
+
+/* ---------- state ---------- */
+const state = { query: '', results: [], song: null, items: [], lineByN: new Map(), selected: [], controller: null };
+const ui = { lines: new Map() };
+const stage = $('#stage');
+const live = (msg) => { const n = $('#live'); n.textContent = ''; setTimeout(() => { n.textContent = msg; }, 40); };
+
+/* ---------- lyrics from LRCLIB ---------- */
+class HttpError extends Error { constructor(status) { super('HTTP ' + status); this.status = status; } }
+
+function stripSynced(s) {
+  return s.split(/\r?\n/).map((l) => l.replace(/^\s*(\[[^\]]*\]\s*)+/, '').replace(/<\d+:\d+(?:[.:]\d+)?>/g, '')).join('\n');
+}
+function normalise(data) {
+  if (!Array.isArray(data)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const r of data) {
+    if (!r || r.instrumental) continue;
+    let text = typeof r.plainLyrics === 'string' ? r.plainLyrics : '';
+    if (!text.trim() && typeof r.syncedLyrics === 'string') text = stripSynced(r.syncedLyrics);
+    if (!text.trim()) continue;
+    const key = [r.trackName, r.artistName, r.albumName].map((x) => String(x || '').trim().toLowerCase()).join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      id: r.id,
+      title: String(r.trackName || r.name || 'Untitled'),
+      artist: String(r.artistName || 'Unknown artist'),
+      album: String(r.albumName || ''),
+      duration: Number(r.duration) || 0,
+      lyrics: text
+    });
+    if (out.length >= 20) break;
+  }
+  return out;
+}
+function parseLyrics(text) {
+  const items = [];
+  let n = 0;
+  let lastGap = true;
+  for (const raw of text.split(/\r?\n/)) {
+    const t = raw.replace(/\s+/g, ' ').trim();
+    if (!t) { if (!lastGap) { items.push({ type: 'gap' }); lastGap = true; } continue; }
+    if (/^[♪♫\s]+$/.test(t)) continue;
+    if (/^\[[^\]]{1,40}\]$/.test(t)) { items.push({ type: 'label', text: t.slice(1, -1) }); lastGap = false; continue; }
+    n++;
+    items.push({ type: 'line', n, text: t });
+    lastGap = false;
+  }
+  while (items.length && items[items.length - 1].type === 'gap') items.pop();
+  return { items, count: n };
+}
+const firstLine = (text) => {
+  const p = parseLyrics(text).items.find((i) => i.type === 'line');
+  return p ? p.text : '';
+};
+
+/* Ask LRCLIB directly first. If the browser blocks that and this page is served
+   over http(s), try the same-origin /api/search (the small server.py proxy). */
+async function fetchSearch(q, signal) {
+  const enc = encodeURIComponent(q);
+  const urls = [API + '?q=' + enc];
+  if (/^https?:$/.test(location.protocol) && location.hostname !== 'lrclib.net') urls.push('/api/search?q=' + enc);
+  let first;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { signal });
+      if (!res.ok) throw new HttpError(res.status);
+      return await res.json();
+    } catch (e) {
+      if (signal.aborted) throw e;
+      if (e instanceof HttpError && e.status === 429) throw e;
+      first = first || e;
+    }
+  }
+  throw first;
+}
+
+async function runSearch(raw) {
+  const q = raw.trim();
+  if (!q) { $('#q').focus(); return; }
+  state.query = q;
+  state.controller?.abort();
+  const ctrl = new AbortController();
+  state.controller = ctrl;
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, 15000);
+  setBusy(true);
+  showLoading();
+  try {
+    const data = await fetchSearch(q, ctrl.signal);
+    if (state.controller !== ctrl) return;
+    state.results = normalise(data);
+    if (state.results.length === 1) openSong(state.results[0]);
+    else renderResults();
+    live(state.results.length + (state.results.length === 1 ? ' match found' : ' matches found'));
+  } catch (err) {
+    if (state.controller !== ctrl) return;
+    showError(timedOut ? 'timeout' : err instanceof HttpError ? 'http' : 'network', err.status, err);
+  } finally {
+    clearTimeout(timer);
+    if (state.controller === ctrl) setBusy(false);
+  }
+}
+function setBusy(on) {
+  const b = $('#goBtn');
+  b.disabled = on;
+  b.firstElementChild.textContent = on ? 'Searching…' : '';
+  if (!on) b.firstElementChild.replaceChildren('Find ', el('span', { class: 'long', text: 'lyrics' }));
+}
+
+/* ---------- stage views ---------- */
+function showWelcome() {
+  const examples = ['Tum Hi Ho', 'Kesariya', 'Channa Mereya', 'Lag Ja Gale', 'Chaiyya Chaiyya'];
+  const step = (t, d) => el('li', {}, el('div', {}, el('b', { text: t }), el('span', { text: d })));
+  stage.replaceChildren(el('section', { class: 'card welcome' },
+    el('h2', { text: 'Make a password out of a song you know by heart' }),
+    el('ol', { class: 'steps' },
+      step('Search for a song', 'Type its name. Add the singer if the title is common.'),
+      step('Tick the lines you remember', 'Each tick highlights the line and adds it to your password.'),
+      step('Copy your password', 'It is built on this page and never uploaded.')),
+    el('div', { class: 'examples' },
+      el('span', { class: 'muted', text: 'Try one:' }),
+      examples.map((name) => el('button', { type: 'button', class: 'chip-btn', text: name, onclick: () => { $('#q').value = name; runSearch(name); } })))));
+}
+function showLoading() {
+  state.song = null;
+  resetSelection();
+  stage.replaceChildren(el('div', { class: 'results', 'aria-hidden': 'true' }, el('div', { class: 'skeleton' }), el('div', { class: 'skeleton' }), el('div', { class: 'skeleton' })));
+  updatePanel();
+}
+function showError(kind, status, err) {
+  const text = {
+    timeout: 'LRCLIB took too long to answer. Check your connection and try again.',
+    network: 'The browser could not complete the request to lrclib.net. This often happens when the page is open inside a preview window (for example in the Claude app) that blocks outside requests. Download the file and open it in Chrome, Edge or Firefox.',
+    http: status === 429 ? 'LRCLIB is busy right now. Wait a few seconds and try again.' : 'LRCLIB sent back an error (' + status + '). Try again in a moment.'
+  }[kind];
+  const where = location.protocol === 'file:' ? 'a local file' : location.origin;
+  const detail = (err && (err.name + ': ' + err.message)) + '. Page opened from ' + where + '.';
+  stage.replaceChildren(el('section', { class: 'card msg', role: 'alert' },
+    el('h2', { text: 'The search did not go through' }),
+    el('p', { text }),
+    kind === 'network' ? el('p', { text: 'Still blocked? Run the small server.py that came with this page and open http://localhost:8000 instead.' }) : null,
+    el('details', { class: 'muted' }, el('summary', { text: 'Technical details' }), el('p', { text: detail })),
+    button('Try again', null, 'primary', () => runSearch(state.query))));
+  live('The search did not go through');
+}
+function renderResults() {
+  state.song = null;
+  resetSelection();
+  updatePanel();
+  const list = state.results;
+  if (!list.length) {
+    stage.replaceChildren(el('section', { class: 'card msg' },
+      el('h2', { text: 'No lyrics found for “' + state.query + '”' }),
+      el('p', { text: 'LRCLIB is a community database, so some songs are missing or spelled differently. Try:' }),
+      el('ul', {},
+        el('li', { text: 'The title in English letters, then in Hindi or Punjabi script' }),
+        el('li', { text: 'Only the main words, for example “Kesariya” instead of the full film title' }),
+        el('li', { text: 'The singer or film name along with the song' }))));
+    return;
+  }
+  const n = list.length;
+  stage.replaceChildren(el('section', {},
+    el('h2', { class: 'stage-title', text: n + (n === 1 ? ' match' : ' matches') + ' for “' + state.query + '”' }),
+    el('p', { class: 'stage-note', text: 'Pick the version you know. Some are in Hindi script, others in English letters.' }),
+    el('div', { class: 'results' }, list.map((r) => {
+      const art = el('span', { class: 'art', 'aria-hidden': 'true', text: (graphemes(r.title)[0] || '♪').toUpperCase() });
+      const snip = firstLine(r.lyrics);
+      return el('button', { type: 'button', class: 'result', onclick: () => openSong(r) }, art,
+        el('span', { class: 'info' },
+          el('h3', { text: r.title }),
+          el('span', { class: 'by' }, el('span', { text: r.artist }), r.album ? el('span', { text: r.album }) : null, r.duration ? el('span', { text: fmtDur(r.duration) }) : null),
+          snip ? el('p', { class: 'snip', text: snip }) : null));
+    }))));
+}
+
+function openSong(r) {
+  const parsed = parseLyrics(r.lyrics);
+  state.song = r;
+  state.items = parsed.items;
+  state.lineByN = new Map(parsed.items.filter((i) => i.type === 'line').map((i) => [i.n, i]));
+  state.selected = [];
+  renderSong();
+  updatePanel();
+  if (mobileMQ.matches) stage.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+function renderSong() {
+  const s = state.song;
+  ui.lines = new Map();
+  const rows = [];
+  const list = el('div', { class: 'lyrics', role: 'group', 'aria-label': 'Lyrics. Tick the lines to use.' });
+  for (const it of state.items) {
+    if (it.type === 'gap') {
+      const node = el('div', { class: 'gap', 'aria-hidden': 'true' });
+      list.append(node); rows.push({ type: 'gap', node });
+    } else if (it.type === 'label') {
+      const node = el('div', { class: 'section-name', text: it.text });
+      list.append(node); rows.push({ type: 'label', node });
+    } else {
+      const input = el('input', { type: 'checkbox', 'data-n': it.n });
+      const box = el('span', { class: 'box', 'aria-hidden': 'true' });
+      box.innerHTML = ICON.check;
+      const node = el('label', { class: 'line' }, input, box,
+        el('span', { class: 'num', 'aria-hidden': 'true', text: it.n }),
+        el('span', { class: 'txt-wrap' }, el('span', { class: 'txt', text: it.text })));
+      list.append(node);
+      rows.push({ type: 'line', node, text: it.text });
+      ui.lines.set(it.n, { input, row: node });
+    }
+  }
+  list.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t instanceof HTMLInputElement && t.dataset.n) setLine(Number(t.dataset.n), t.checked);
+  });
+
+  const noMatch = el('p', { class: 'msg muted', text: 'No line contains that text.', hidden: true });
+  const filterInput = el('input', { type: 'search', placeholder: 'Find a line in this song', 'aria-label': 'Find a line in this song', autocomplete: 'off', spellcheck: 'false' });
+  filterInput.addEventListener('input', () => {
+    const term = filterInput.value.trim().toLowerCase();
+    let shown = 0;
+    for (const r of rows) {
+      if (r.type === 'line') { const hit = !term || r.text.toLowerCase().includes(term); r.node.hidden = !hit; if (hit) shown++; }
+      else r.node.hidden = !!term;
+    }
+    noMatch.hidden = shown > 0;
+  });
+
+  const actions = el('div', { class: 'song-actions' },
+    state.results.length > 1 ? button('Other matches', 'back', 'ghost', () => { renderResults(); if (mobileMQ.matches) stage.scrollIntoView({ block: 'start' }); }) : null,
+    button('Pick 4 for me', 'dice', 'ghost', surprise));
+
+  stage.replaceChildren(el('section', { class: 'card song' },
+    el('div', { class: 'song-head' },
+      el('div', {},
+        el('h2', { text: s.title }),
+        el('p', { class: 'artist', text: s.artist }),
+        el('p', { class: 'meta' }, s.album ? el('span', { text: s.album }) : null, s.duration ? el('span', { text: fmtDur(s.duration) }) : null)),
+      actions),
+    el('div', { class: 'toolbar' },
+      el('span', { text: 'Tick the lines to use. Lines from different parts of the song make a stronger password.' }),
+      el('label', { class: 'filter' }, filterInput)),
+    list, noMatch));
+}
+
+/* ---------- selection ---------- */
+function resetSelection() { state.selected = []; ui.lines = new Map(); }
+function syncRows() {
+  const set = new Set(state.selected);
+  for (const [n, { input, row }] of ui.lines) { const on = set.has(n); input.checked = on; row.classList.toggle('on', on); }
+}
+function setLine(n, on) {
+  const i = state.selected.indexOf(n);
+  if (on && i === -1) state.selected.push(n);
+  if (!on && i !== -1) state.selected.splice(i, 1);
+  const ref = ui.lines.get(n);
+  if (ref) { ref.input.checked = on; ref.row.classList.toggle('on', on); }
+  updatePanel();
+}
+function setSelection(arr) { state.selected = arr; syncRows(); updatePanel(); }
+function surprise() {
+  const lines = [...state.lineByN.values()];
+  if (!lines.length) return;
+  const seenText = new Set();
+  let pool = lines.filter((l) => { const k = l.text.toLowerCase(); if (seenText.has(k)) return false; seenText.add(k); return true; });
+  const long = pool.filter((l) => l.text.split(/\s+/).length >= 3);
+  if (long.length >= 4) pool = long;
+  const picked = [];
+  const copy = pool.slice();
+  while (picked.length < Math.min(4, copy.length + picked.length)) picked.push(copy.splice(randInt(copy.length), 1)[0].n);
+  setSelection(picked);
+  live(picked.length + ' random lines ticked');
+}
+
+/* ---------- building the password ---------- */
+function tokenise(text) {
+  let t = text.normalize('NFC');
+  if (opts.strip) t = t.replace(/['’‘`´]/g, '').replace(/[^\p{L}\p{M}\p{N}\s‌‍]/gu, ' ');
+  return t.split(/\s+/).filter(Boolean);
+}
+function applyCase(w) {
+  switch (opts.casing) {
+    case 'lower': return w.toLowerCase();
+    case 'upper': return w.toUpperCase();
+    case 'cap': { const g = graphemes(w); return g[0].toUpperCase() + g.slice(1).join('').toLowerCase(); }
+    default: return w;
+  }
+}
+function initial(w) {
+  const g = graphemes(w);
+  const first = g.find((c) => /[\p{L}\p{N}]/u.test(c)) ?? g[0];
+  return applyCase(first);
+}
+function orderedSelection() {
+  const a = state.selected.slice();
+  return opts.order === 'click' ? a : a.sort((x, y) => x - y);
+}
+function buildPassword() {
+  const ids = orderedSelection();
+  if (!ids.length) return '';
+  const parts = [];
+  for (const n of ids) {
+    const line = state.lineByN.get(n);
+    if (!line) continue;
+    const words = tokenise(line.text);
+    if (!words.length) continue;
+    parts.push(opts.style === 'initials' ? words.map(initial).join('') : words.map(applyCase).join(opts.sep));
+  }
+  let pw = parts.join(opts.sep);
+  if (pw && opts.suffix) pw += ids.join('') + '!';
+  return pw;
+}
+function strengthOf(len) {
+  if (len === 0) return { level: 0, label: 'Nothing yet' };
+  if (len < 10) return { level: 1, label: 'Too short' };
+  if (len < 16) return { level: 2, label: 'Okay' };
+  if (len < 24) return { level: 3, label: 'Good' };
+  return { level: 4, label: 'Strong' };
+}
+
+/* ---------- password panel ---------- */
+const P = {
+  readout: $('#readout'), copy: $('#copyBtn'), eye: $('#eyeBtn'), clear: $('#clearBtn'),
+  count: $('#count'), meter: $('#meter'), meterLabel: $('#meterLabel'), len: $('#lenLabel'),
+  notes: $('#notes'), picks: $('#picks'), picksEmpty: $('#picksEmpty')
+};
+P.clear.innerHTML = ICON.reset;
+
+function updatePanel() {
+  const pw = buildPassword();
+  const len = Array.from(pw).length;
+  const empty = len === 0;
+  const n = state.selected.length;
+
+  $('#panel').classList.toggle('idle', !state.song);
+  P.readout.classList.toggle('empty', empty);
+  P.readout.classList.toggle('masked', !empty && !opts.reveal);
+  P.readout.textContent = empty
+    ? (state.song ? 'Tick lines in the lyrics to build your password.' : 'Search for a song, then tick the lines you want.')
+    : (opts.reveal ? pw : '•'.repeat(Math.min(len, 48)));
+  P.copy.disabled = empty;
+  P.clear.disabled = n === 0;
+  P.count.textContent = n + (n === 1 ? ' line' : ' lines');
+
+  const st = strengthOf(len);
+  P.meter.dataset.level = st.level;
+  P.meterLabel.textContent = st.label;
+  P.len.textContent = empty ? '' : len + ' characters';
+
+  const notes = [];
+  if (!empty && /[^\x00-\x7f]/.test(pw)) notes.push('This password has non-English characters. Some sites and keyboards cannot handle them. Try a version of the song written in English letters.');
+  if (!empty && !/\d|[^\p{L}\p{N}]/u.test(pw)) notes.push('Some sites ask for a number or symbol. Turn on “Add line numbers and !” below if yours does.');
+  if (!empty && len < 10) notes.push('Tick a few more lines to make it longer.');
+  P.notes.replaceChildren(...notes.map((t) => el('p', { text: t })));
+  P.notes.hidden = notes.length === 0;
+
+  const ids = orderedSelection();
+  P.picks.replaceChildren(...ids.map((num) => {
+    const line = state.lineByN.get(num);
+    const b = el('button', { type: 'button', class: 'pick', 'aria-label': 'Untick line ' + num + ': ' + (line ? line.text : ''), onclick: () => setLine(num, false) },
+      el('b', { text: num }), el('span', { text: line ? line.text : '' }));
+    b.insertAdjacentHTML('beforeend', ICON.x);
+    return el('li', {}, b);
+  }));
+  P.picksEmpty.hidden = ids.length > 0;
+
+  P.eye.innerHTML = opts.reveal ? ICON.eye : ICON.eyeOff;
+  P.eye.setAttribute('aria-pressed', String(opts.reveal));
+  P.eye.setAttribute('aria-label', opts.reveal ? 'Hide password' : 'Show password');
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fall back */ }
+  try {
+    const ta = el('textarea', { readonly: true, style: 'position:fixed;top:0;left:0;opacity:0' });
+    ta.value = text;
+    document.body.append(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+let copyTimer;
+P.copy.addEventListener('click', async () => {
+  const pw = buildPassword();
+  if (!pw) return;
+  const ok = await copyText(pw);
+  clearTimeout(copyTimer);
+  if (ok) {
+    P.copy.textContent = 'Copied';
+    live('Password copied');
+  } else {
+    opts.reveal = true;
+    updatePanel();
+    const r = document.createRange();
+    r.selectNodeContents(P.readout);
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    P.copy.textContent = 'Press Ctrl+C to copy';
+    live('Copy failed. The password is selected, press Ctrl+C to copy it.');
+  }
+  copyTimer = setTimeout(() => { P.copy.textContent = 'Copy password'; }, 2200);
+});
+P.eye.addEventListener('click', () => { opts.reveal = !opts.reveal; updatePanel(); });
+P.clear.addEventListener('click', () => setSelection([]));
+
+/* options wiring */
+for (const name of ['style', 'sep', 'casing', 'order']) {
+  for (const input of $$('input[name="' + name + '"]')) {
+    input.checked = input.value === opts[name];
+    input.addEventListener('change', () => { if (input.checked) { opts[name] = input.value; saveOpts(); updatePanel(); } });
+  }
+}
+for (const [id, key] of [['#optStrip', 'strip'], ['#optSuffix', 'suffix']]) {
+  const box = $(id);
+  box.checked = opts[key];
+  box.addEventListener('change', () => { opts[key] = box.checked; saveOpts(); updatePanel(); });
+}
+
+/* phone layout: the password bar is pinned to the bottom, so leave room for it */
+const panel = $('#panel');
+const syncPad = () => { document.body.style.paddingBottom = mobileMQ.matches ? (panel.offsetHeight + 12) + 'px' : ''; };
+if ('ResizeObserver' in window) new ResizeObserver(syncPad).observe(panel);
+mobileMQ.addEventListener('change', syncPad);
+$('#fine').open = !mobileMQ.matches;
+
+/* ---------- start ---------- */
+$('#searchForm').addEventListener('submit', (e) => { e.preventDefault(); runSearch($('#q').value); });
+showWelcome();
+updatePanel();
+syncPad();
+$('#q').focus();
+})();
+</script>
+</body>
+</html>
